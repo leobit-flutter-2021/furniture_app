@@ -1,6 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import 'item_page.dart';
+import 'package:lab4/category.dart';
+import 'package:lab4/item_page.dart';
+import 'package:lab4/navigation_bar.dart';
+import 'package:lab4/state.dart';
+import 'package:lab4/utils.dart';
+import 'package:provider/provider.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({Key? key}) : super(key: key);
@@ -9,42 +14,312 @@ class ExplorePage extends StatefulWidget {
   State<ExplorePage> createState() => _ExplorePageState();
 }
 
-class _ExplorePageState extends State<ExplorePage> {
-  int _selectedIndex = 0;
-  static const TextStyle optionStyle =
-      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-  static const List<Widget> _widgetOptions = <Widget>[
-    Text("Explore"),
-    Text("My Bag"),
-  ];
+List<Category> allCategories = Utils.getMockedCategory();
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+class _ExplorePageState extends State<ExplorePage> {
+  int? selected;
+  List<Category> categories = List.of(allCategories.toList());
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_bag),
-            label: 'My Bag',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.green[800],
-        onTap: _onItemTapped,
-      ),
-    );
+    return Consumer<CartModel>(
+        builder: (context, cart, child) => Scaffold(
+              body: Center(
+                child: Container(
+                  color: Colors.amber[50],
+                  padding: const EdgeInsets.only(
+                    top: 40,
+                    left: 30,
+                    right: 30,
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(child: Container()),
+                          const Icon(
+                            Icons.search,
+                            size: 30,
+                            color: Colors.black,
+                          ),
+                          const SizedBox(
+                            width: 15,
+                          ),
+                          const Icon(Icons.add_alert_outlined,
+                              size: 30, color: Colors.black),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: const [
+                          Text(
+                            "Explore",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: categories.length,
+                          scrollDirection: Axis.horizontal,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Container(
+                              margin: const EdgeInsets.all(20),
+                              height: MediaQuery.of(context).size.height,
+                              child: Stack(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => ItemPage(
+                                                  selectedCategory:
+                                                      categories[index],
+                                                )),
+                                      );
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.asset(
+                                        categories[index].imgName + ".jpg",
+                                        fit: BoxFit.cover,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.only(
+                                          left: 10, bottom: 5),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(width: 20),
+                                          Text(
+                                            categories[index].name,
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          Text(
+                                            categories[index].price.toString() +
+                                                " " +
+                                                "USD",
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 5.0),
+                        height: 50.0,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: <Widget>[
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                textStyle: const TextStyle(fontSize: 20),
+                              ),
+                              onPressed: () {
+                                selected = selected == 0 ? null : 0;
+                                setState(() => {
+                                      categories = allCategories
+                                          .where((element) => selected == 0
+                                              ? element.price > 8000
+                                              : true)
+                                          .toList()
+                                    });
+                              },
+                              child: Text('8000 and upper',
+                                  style: TextStyle(
+                                      color: selected == 0
+                                          ? Colors.black
+                                          : Colors.grey)),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                textStyle: const TextStyle(fontSize: 20),
+                              ),
+                              onPressed: () {
+                                selected = selected == 1 ? null : 1;
+                                setState(() => {
+                                      categories = allCategories
+                                          .where((element) => selected == 1
+                                              ? element.price > 4000 &&
+                                                  element.price <= 8000
+                                              : true)
+                                          .toList()
+                                    });
+                              },
+                              child: Text('4000-8000',
+                                  style: TextStyle(
+                                      color: selected == 1
+                                          ? Colors.black
+                                          : Colors.grey)),
+                            ),
+                            TextButton(
+                              style: TextButton.styleFrom(
+                                textStyle: const TextStyle(fontSize: 20),
+                              ),
+                              onPressed: () {
+                                selected = selected == 2 ? null : 2;
+                                setState(() => {
+                                      categories = allCategories
+                                          .where((element) => selected == 2
+                                              ? element.price <= 4000
+                                              : true)
+                                          .toList()
+                                    });
+                              },
+                              child: Text('Under 4000',
+                                  style: TextStyle(
+                                      color: selected == 2
+                                          ? Colors.black
+                                          : Colors.grey)),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: categories.length,
+                          scrollDirection: Axis.vertical,
+                          itemBuilder: (BuildContext context, int index) {
+                            return Container(
+                              padding: const EdgeInsets.all(20),
+                              height: MediaQuery.of(context).size.height / 2,
+                              width: MediaQuery.of(context).size.width,
+                              child: Stack(
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => ItemPage(
+                                                  selectedCategory:
+                                                      categories[index],
+                                                )),
+                                      );
+                                    },
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.asset(
+                                        categories[index].imgName + ".jpg",
+                                        fit: BoxFit.cover,
+                                        height:
+                                            MediaQuery.of(context).size.height,
+                                        width:
+                                            MediaQuery.of(context).size.width,
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.only(
+                                          left: 30, top: 40),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // SizedBox(width: 10),
+                                          Text(
+                                            categories[index].name,
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 30,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          const Text(
+                                            "Here should be a \ndescription of this\nfurniture",
+                                            textAlign: TextAlign.left,
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            categories[index].price.toString() +
+                                                " " +
+                                                "USD",
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 20),
+                                          Row(children: [
+                                            ClipOval(
+                                              child: IconButton(
+                                                  onPressed: () {},
+                                                  icon: const Icon(
+                                                      Icons.favorite,
+                                                      color: Colors.red)),
+                                            ),
+                                            const SizedBox(width: 20),
+                                            ClipOval(
+                                              child: IconButton(
+                                                icon: Icon(Icons.shopping_bag,
+                                                    color: cart.items.contains(
+                                                            categories[index])
+                                                        ? Colors.green[400]
+                                                        : Colors.black),
+                                                onPressed: () {
+                                                  if (cart.items.contains(
+                                                      categories[index])) {
+                                                    cart.items.remove(
+                                                        categories[index]);
+                                                  } else {
+                                                    cart.add(categories[index]);
+                                                  }
+                                                },
+                                              ),
+                                            )
+                                          ])
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              bottomNavigationBar: NavigationBar(),
+            ));
   }
 }
